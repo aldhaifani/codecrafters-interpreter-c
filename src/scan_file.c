@@ -2,6 +2,7 @@
 // Created by Tareq Aldhaifani on 22/12/2024.
 //
 #include <string.h>
+#include <ctype.h>
 
 #include "common.h"
 #include "scan_file.h"
@@ -69,6 +70,49 @@ int scan_file(const char* file_contents)
             continue;  // Skip checking other lexemes after a string literal
         }
 
+        // Check for number literal
+        if (isdigit(file_contents[i]))
+        {
+            size_t start_index = i;
+            while (i < file_size && isdigit(file_contents[i]))
+            {
+                i++;
+            }
+            if (file_contents[i] == '.' && isdigit(file_contents[i + 1]))
+            {
+                i++; // Skip the dot
+                while (i < file_size && isdigit(file_contents[i]))
+                {
+                    i++;
+                }
+            }
+            size_t number_length = i - start_index;
+            char *literal = malloc(number_length + 1);
+            if (literal == NULL)
+            {
+                exit_code = 1;
+                break;
+            }
+            strncpy(literal, &file_contents[start_index], number_length);
+            literal[number_length] = '\0';  // Null-terminate the string
+
+            printf("NUMBER %s", literal);  // Print number token with literal content
+
+            double number = strtod(literal, NULL);
+
+            if ((int)number == number)
+            {
+                printf(" %.1f\n", number);
+            }
+            else
+            {
+                printf(" %g\n", number);
+            }
+
+            free(literal);
+            continue;  // Skip checking other lexemes after a number literal
+        }
+
         // Check for two-character lexemes first
         const Token* token = NULL;
         if (i + 1 < file_size)
@@ -118,4 +162,3 @@ int scan_file(const char* file_contents)
     }
     return exit_code;
 }
-
