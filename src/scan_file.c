@@ -23,6 +23,7 @@ int scan_file(const char* file_contents)
 {
     int exit_code = 0;
     size_t file_size = strlen(file_contents);
+    int line_number = 1; // Start from line 1
     for (size_t i = 0; i < file_size;)
     {
         // Check for two-character lexemes first
@@ -35,7 +36,7 @@ int scan_file(const char* file_contents)
             {
                 if (strcmp(token->key, "//") == 0)
                 {
-                    // Skip the rest of the line
+                    // Skip the rest of the line (comment)
                     while (i < file_size && file_contents[i] != '\n')
                     {
                         i++;
@@ -54,6 +55,10 @@ int scan_file(const char* file_contents)
             // if space, tab, newline, continue
             if (strcmp(token->key, " ") == 0 || strcmp(token->key, "\t") == 0 || strcmp(token->key, "\n") == 0)
             {
+                if (file_contents[i] == '\n')
+                {
+                    line_number++; // Increment line number if newline character is encountered
+                }
                 i += 1;
                 continue;
             }
@@ -62,7 +67,8 @@ int scan_file(const char* file_contents)
         }
         else
         {
-            fprintf(stderr, "[line 1] Error: Unexpected character: %c\n", file_contents[i]);
+            // Print error with line number
+            fprintf(stderr, "[line %d] Error: Unexpected character: %c\n", line_number, file_contents[i]);
             exit_code = 65;
             i++; // Move to the next character, even if it's invalid
         }
