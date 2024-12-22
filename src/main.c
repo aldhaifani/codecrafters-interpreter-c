@@ -4,6 +4,32 @@
 
 char* read_file_contents(const char* filename);
 
+typedef struct
+{
+    char key;
+    const char* token_name;
+    const char* value;
+} Token;
+
+static Token tokens[] = {
+    {'(', "LEFT_PAREN", "null"},
+    {')', "RIGHT_PAREN", "null"},
+    {'{', "LEFT_BRACE", "null"},
+    {'}', "RIGHT_BRACE", "null"},
+    {';', "SEMICOLON", "null"},
+    {',', "COMMA", "null"},
+    {'.', "DOT", "null"},
+    {'-', "MINUS", "null"},
+    {'+', "PLUS", "null"},
+    {'/', "SLASH", "null"},
+    {'*', "STAR", "null"},
+    {'\0', "EOF", "null"},
+};
+
+const Token *find_lexeme(char key);
+void scan_file(const char *file_contents);
+
+
 int main(int argc, char* argv[])
 {
     // Disable output buffering
@@ -24,24 +50,7 @@ int main(int argc, char* argv[])
 
         if (strlen(file_contents) > 0)
         {
-            for (int i = 0; i < strlen(file_contents); i++)
-            {
-                switch (file_contents[i])
-                {
-                case '(':
-                    printf("LEFT_PAREN ( null\n");
-                    break;
-                case ')':
-                    printf("RIGHT_PAREN ) null\n");
-                    break;
-                case '{':
-                    printf("LEFT_BRACE { null\n");
-                    break;
-                case '}':
-                    printf("RIGHT_BRACE } null\n");
-                    break;
-                }
-            }
+            scan_file(file_contents);
         }
         printf("EOF  null\n"); // Placeholder, remove this line when implementing the scanner
 
@@ -90,4 +99,29 @@ char* read_file_contents(const char* filename)
     fclose(file);
 
     return file_contents;
+}
+
+const Token *find_lexeme(char key)
+{
+    for (int i = 0; i < sizeof(tokens) / sizeof(Token); i++)
+    {
+        if (tokens[i].key == key)
+        {
+            return &tokens[i];
+        }
+    }
+
+    return NULL;
+}
+
+void scan_file(const char *file_contents)
+{
+    for (size_t i = 0; i < strlen(file_contents); i++)
+    {
+        const Token *token = find_lexeme(file_contents[i]);
+        if (token != NULL)
+        {
+            printf("%s %c %s\n", token->token_name, token->key, token->value);
+        }
+    }
 }
