@@ -6,27 +6,35 @@ char* read_file_contents(const char* filename);
 
 typedef struct
 {
-    char key;
+    const char* key;
     const char* token_name;
     const char* value;
 } Token;
 
 static Token tokens[] = {
-    {'(', "LEFT_PAREN", "null"},
-    {')', "RIGHT_PAREN", "null"},
-    {'{', "LEFT_BRACE", "null"},
-    {'}', "RIGHT_BRACE", "null"},
-    {';', "SEMICOLON", "null"},
-    {',', "COMMA", "null"},
-    {'.', "DOT", "null"},
-    {'-', "MINUS", "null"},
-    {'+', "PLUS", "null"},
-    {'/', "SLASH", "null"},
-    {'*', "STAR", "null"},
-    {'\0', "EOF", "null"},
+    {"(", "LEFT_PAREN", "null"},
+    {")", "RIGHT_PAREN", "null"},
+    {"{", "LEFT_BRACE", "null"},
+    {"}", "RIGHT_BRACE", "null"},
+    {";", "SEMICOLON", "null"},
+    {",", "COMMA", "null"},
+    {".", "DOT", "null"},
+    {"-", "MINUS", "null"},
+    {"+", "PLUS", "null"},
+    {"/", "SLASH", "null"},
+    {"*", "STAR", "null"},
+    {"=", "EQUAL", "null"},
+    {"<", "LESS", "null"},
+    {">", "GREATER", "null"},
+    {">=", "GREATER_EQUAL", "null"},
+    {"<=", "LESS_EQUAL", "null"},
+    {"==", "EQUAL_EQUAL", "null"},
+    {"!=", "BANG_EQUAL", "null"},
+    {"!", "BANG", "null"},
+    {"\0", "EOF", "null"},
 };
 
-const Token *find_lexeme(char key);
+const Token *find_lexeme(const char* key);
 int scan_file(const char *file_contents);
 
 
@@ -102,11 +110,11 @@ char* read_file_contents(const char* filename)
     return file_contents;
 }
 
-const Token *find_lexeme(char key)
+const Token *find_lexeme(const char* key)
 {
     for (int i = 0; i < sizeof(tokens) / sizeof(Token); i++)
     {
-        if (tokens[i].key == key)
+        if (strcmp(tokens[i].key, key) == 0)
         {
             return &tokens[i];
         }
@@ -118,17 +126,34 @@ const Token *find_lexeme(char key)
 int scan_file(const char *file_contents)
 {
     int exit_code = 0;
-    for (size_t i = 0; i < strlen(file_contents); i++)
+    size_t file_size = strlen(file_contents);
+    for (size_t i = 0; i < file_size;)
     {
-        const Token *token = find_lexeme(file_contents[i]);
+        // Check for two-character lexemes first
+        const Token *token = NULL;
+        if (i + 1 < file_size)
+        {
+            char lexeme[3] = {file_contents[i], file_contents[i + 1], '\0'};
+            token = find_lexeme(lexeme);
+            if (token != NULL)
+            {
+                printf("%s %s %s\n", token->token_name, token->key, token->value);
+                i += 2; // Skip the next character as it's part of the lexeme
+                continue;
+            }
+        }
+        // Check for one-character lexemes
+        token = find_lexeme((char[]){file_contents[i], '\0'});
         if (token != NULL)
         {
-            printf("%s %c %s\n", token->token_name, token->key, token->value);
+            printf("%s %s %s\n", token->token_name, token->key, token->value);
+            i++; // Move to the next character
         }
         else
         {
             fprintf(stderr, "[line 1] Error: Unexpected character: %c\n", file_contents[i]);
             exit_code = 65;
+            i++; // Move to the next character, even if it's invalid
         }
     }
     return exit_code;
