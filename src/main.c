@@ -31,6 +31,7 @@ static Token tokens[] = {
     {"==", "EQUAL_EQUAL", "null"},
     {"!=", "BANG_EQUAL", "null"},
     {"!", "BANG", "null"},
+    {"//", "COMMENT", "null"},
     {"\0", "EOF", "null"},
 };
 
@@ -137,6 +138,10 @@ int scan_file(const char *file_contents)
             token = find_lexeme(lexeme);
             if (token != NULL)
             {
+                if (strcmp(token->key, "//") == 0)
+                {
+                    break;
+                }
                 printf("%s %s %s\n", token->token_name, token->key, token->value);
                 i += 2; // Skip the next character as it's part of the lexeme
                 continue;
