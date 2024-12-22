@@ -26,6 +26,49 @@ int scan_file(const char* file_contents)
     int line_number = 1; // Start from line 1
     for (size_t i = 0; i < file_size;)
     {
+        // Check for string literal
+        if (file_contents[i] == '"')
+        {
+            size_t start_index = i;
+            i++; // Move past the opening quote
+            // Find the closing quote
+            while (i < file_size && file_contents[i] != '"')
+            {
+                if (file_contents[i] == '\\')  // Handle escape sequences
+                {
+                    i++; // Skip the escaped character (e.g., \", \n)
+                }
+                i++;
+            }
+
+            if (i >= file_size || file_contents[i] != '"')  // Unterminated string
+            {
+                fprintf(stderr, "[line %d] Error: Unterminated string.\n", line_number);
+                exit_code = 65;
+                while (i < file_size && file_contents[i] != '\n')  // Skip to next line to recover
+                {
+                    i++;
+                }
+                continue;
+            }
+
+            size_t string_length = i - start_index - 1;  // Exclude the quotes
+            char *literal = malloc(string_length + 1);
+            if (literal == NULL)
+            {
+                exit_code = 1;
+                break;
+            }
+            strncpy(literal, &file_contents[start_index + 1], string_length);
+            literal[string_length] = '\0';  // Null-terminate the string
+
+            printf("STRING \"%s\" %s\n", literal, literal);  // Print string token with literal content
+            free(literal);
+
+            i++;  // Move past the closing quote
+            continue;  // Skip checking other lexemes after a string literal
+        }
+
         // Check for two-character lexemes first
         const Token* token = NULL;
         if (i + 1 < file_size)
