@@ -32,11 +32,14 @@ static Token tokens[] = {
     {"!=", "BANG_EQUAL", "null"},
     {"!", "BANG", "null"},
     {"//", "COMMENT", "null"},
+    {" ", "SPACE", "null"},
+    {"\t", "TAB", "null"},
+    {"\n", "NEWLINE", "null"},
     {"\0", "EOF", "null"},
 };
 
-const Token *find_lexeme(const char* key);
-int scan_file(const char *file_contents);
+const Token* find_lexeme(const char* key);
+int scan_file(const char* file_contents);
 
 
 int main(int argc, char* argv[])
@@ -111,7 +114,7 @@ char* read_file_contents(const char* filename)
     return file_contents;
 }
 
-const Token *find_lexeme(const char* key)
+const Token* find_lexeme(const char* key)
 {
     for (int i = 0; i < sizeof(tokens) / sizeof(Token); i++)
     {
@@ -124,14 +127,14 @@ const Token *find_lexeme(const char* key)
     return NULL;
 }
 
-int scan_file(const char *file_contents)
+int scan_file(const char* file_contents)
 {
     int exit_code = 0;
     size_t file_size = strlen(file_contents);
     for (size_t i = 0; i < file_size;)
     {
         // Check for two-character lexemes first
-        const Token *token = NULL;
+        const Token* token = NULL;
         if (i + 1 < file_size)
         {
             char lexeme[3] = {file_contents[i], file_contents[i + 1], '\0'};
@@ -140,7 +143,12 @@ int scan_file(const char *file_contents)
             {
                 if (strcmp(token->key, "//") == 0)
                 {
-                    break;
+                    // Skip the rest of the line
+                    while (i < file_size && file_contents[i] != '\n')
+                    {
+                        i++;
+                    }
+                    continue;
                 }
                 printf("%s %s %s\n", token->token_name, token->key, token->value);
                 i += 2; // Skip the next character as it's part of the lexeme
@@ -151,6 +159,12 @@ int scan_file(const char *file_contents)
         token = find_lexeme((char[]){file_contents[i], '\0'});
         if (token != NULL)
         {
+            // if space, tab, newline, continue
+            if (strcmp(token->key, " ") == 0 || strcmp(token->key, "\t") == 0 || strcmp(token->key, "\n") == 0)
+            {
+                i += 1;
+                continue;
+            }
             printf("%s %s %s\n", token->token_name, token->key, token->value);
             i++; // Move to the next character
         }
