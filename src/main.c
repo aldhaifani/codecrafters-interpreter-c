@@ -27,7 +27,7 @@ static Token tokens[] = {
 };
 
 const Token *find_lexeme(char key);
-void scan_file(const char *file_contents);
+int scan_file(const char *file_contents);
 
 
 int main(int argc, char* argv[])
@@ -43,6 +43,7 @@ int main(int argc, char* argv[])
     }
 
     const char* command = argv[1];
+    int exit_code = 0;
 
     if (strcmp(command, "tokenize") == 0)
     {
@@ -50,7 +51,7 @@ int main(int argc, char* argv[])
 
         if (strlen(file_contents) > 0)
         {
-            scan_file(file_contents);
+            exit_code = scan_file(file_contents);
         }
         printf("EOF  null\n"); // Placeholder, remove this line when implementing the scanner
 
@@ -62,7 +63,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    return 0;
+    return exit_code;
 }
 
 char* read_file_contents(const char* filename)
@@ -114,8 +115,9 @@ const Token *find_lexeme(char key)
     return NULL;
 }
 
-void scan_file(const char *file_contents)
+int scan_file(const char *file_contents)
 {
+    int exit_code = 0;
     for (size_t i = 0; i < strlen(file_contents); i++)
     {
         const Token *token = find_lexeme(file_contents[i]);
@@ -123,5 +125,11 @@ void scan_file(const char *file_contents)
         {
             printf("%s %c %s\n", token->token_name, token->key, token->value);
         }
+        else
+        {
+            fprintf(stderr, "[line 1] Error: Unexpected character: %c\n", file_contents[i]);
+            exit_code = 65;
+        }
     }
+    return exit_code;
 }
